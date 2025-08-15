@@ -1,0 +1,605 @@
+import React, { useMemo, useState } from "react";
+
+// Avyra Dashboard – original design inspired by modern SaaS apps.
+// Single-file React component using TailwindCSS classes.
+// Notes:
+// - No external UI kits required.
+// - Fully responsive with a collapsible sidebar.
+// - Includes: Overview cards, Tickets table, Projects grid, Create Ticket modal,
+//   simple inline analytics chart, integrations section, and settings drawer.
+// - Replace placeholder data and handlers with real API calls when wiring up.
+
+export default function AvyraApp() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [active, setActive] = useState("Overview");
+  const [dark, setDark] = useState(false);
+  const [newTicketOpen, setNewTicketOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const nav = [
+    { name: "Overview", icon: OverviewIcon },
+    { name: "Tickets", icon: TicketIcon },
+    { name: "Projects", icon: ProjectIcon },
+    { name: "Integrations", icon: PlugIcon },
+    { name: "Analytics", icon: ChartIcon },
+    { name: "Team", icon: TeamIcon },
+    { name: "Help", icon: HelpIcon },
+    { name: "Settings", icon: SettingsIcon },
+  ];
+
+  const stats = useMemo(
+    () => [
+      { label: "Open Tickets", value: 42, delta: "+5%" },
+      { label: "Avg Response", value: "1h 12m", delta: "-8%" },
+      { label: "SLA Met", value: "97.3%", delta: "+1.1%" },
+      { label: "CSAT", value: "4.8/5", delta: "+0.2" },
+    ],
+    []
+  );
+
+  const tickets = useMemo(
+    () => [
+      { id: "TKT-1043", subject: "Onboard new group – Horizon Labs", priority: "High", status: "Open", assignee: "Amira Q.", updated: "2m" },
+      { id: "TKT-1042", subject: "Webhook failing on payout", priority: "Medium", status: "In Progress", assignee: "DevOps", updated: "15m" },
+      { id: "TKT-1041", subject: "Rank sync delay for Roblox group #2183", priority: "Low", status: "Waiting", assignee: "Support", updated: "27m" },
+      { id: "TKT-1040", subject: "Add SSO for staff", priority: "High", status: "Open", assignee: "Platform", updated: "1h" },
+    ],
+    []
+  );
+
+  const projects = useMemo(
+    () => [
+      { id: "PRJ-29", name: "Avyra Verification v2", lead: "Niko", status: "Active", progress: 72 },
+      { id: "PRJ-31", name: "Role Sync – Beta", lead: "Kai", status: "Planning", progress: 18 },
+      { id: "PRJ-24", name: "Insights Dashboard", lead: "Sam", status: "Active", progress: 58 },
+      { id: "PRJ-17", name: "Billing Portal", lead: "Ivy", status: "Review", progress: 91 },
+    ],
+    []
+  );
+
+  return (
+    <div className={dark ? "dark" : ""}>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 transition-colors">
+        {/* Top Bar */}
+        <header className="sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-950/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none">
+                <BurgerIcon />
+              </button>
+              <Logo />
+              <span className="hidden sm:inline font-semibold tracking-tight">Avyra Console</span>
+              <span className="ml-2 hidden md:inline text-sm text-slate-500 dark:text-slate-400">group management & ops</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={() => setDark((d) => !d)} className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-sm">
+                {dark ? "Light" : "Dark"}
+              </button>
+              <button onClick={() => setNewTicketOpen(true)} className="px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-medium shadow hover:opacity-90">New Ticket</button>
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500" title="Profile" />
+            </div>
+          </div>
+        </header>
+
+        {/* Main */}
+        <div className="mx-auto max-w-7xl flex">
+          {/* Sidebar */}
+          <aside className={`${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"} fixed md:static z-30 left-0 top-16 h-[calc(100dvh-4rem)] w-72 shrink-0 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 transition-transform`}
+          >
+            <nav className="p-3 space-y-1 overflow-y-auto h-full">
+              {nav.map((item) => (
+                <button
+                  key={item.name}
+                  onClick={() => {
+                    setActive(item.name);
+                    setSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                    active === item.name ? "bg-slate-100 dark:bg-slate-800" : ""
+                  }`}
+                >
+                  <item.icon />
+                  <span>{item.name}</span>
+                  {item.name === "Settings" && (
+                    <span className="ml-auto text-xs text-slate-500">Ctrl+,</span>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </aside>
+
+          {/* Content */}
+          <main className="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 md:ml-0 ml-0 md:mt-0 mt-16">
+            <Announcement />
+
+            {active === "Overview" && (
+              <section className="space-y-6">
+                <h2 className="text-xl font-semibold">Overview</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {stats.map((s) => (
+                    <div key={s.label} className="rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm bg-white dark:bg-slate-950">
+                      <div className="text-sm text-slate-500">{s.label}</div>
+                      <div className="text-2xl font-semibold mt-1">{s.value}</div>
+                      <div className="text-xs mt-2 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800">
+                        <UpRightIcon /> {s.delta}
+                      </div>
+                      <MiniSparkline />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 lg:col-span-2">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-medium">Recent Tickets</h3>
+                      <button onClick={() => setActive("Tickets")} className="text-sm underline">View all</button>
+                    </div>
+                    <TicketsTable tickets={tickets} compact />
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                    <h3 className="font-medium mb-3">Integrations</h3>
+                    <IntegrationsList />
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {active === "Tickets" && (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">Tickets</h2>
+                  <div className="flex items-center gap-2">
+                    <input className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none" placeholder="Search tickets…" />
+                    <select className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none">
+                      <option>All Priorities</option>
+                      <option>High</option>
+                      <option>Medium</option>
+                      <option>Low</option>
+                    </select>
+                    <button onClick={() => setNewTicketOpen(true)} className="px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm font-medium">Create</button>
+                  </div>
+                </div>
+                <TicketsTable tickets={tickets} />
+              </section>
+            )}
+
+            {active === "Projects" && (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">Projects</h2>
+                  <button className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">New Project</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {projects.map((p) => (
+                    <div key={p.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="text-sm text-slate-500">{p.id}</div>
+                          <div className="font-medium">{p.name}</div>
+                        </div>
+                        <span className="text-xs px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800">{p.status}</span>
+                      </div>
+                      <div className="mt-4">
+                        <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-indigo-500 to-fuchsia-500" style={{ width: `${p.progress}%` }} />
+                        </div>
+                        <div className="text-xs mt-2 text-right">{p.progress}%</div>
+                      </div>
+                      <div className="mt-3 text-sm text-slate-500">Lead: {p.lead}</div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {active === "Integrations" && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold">Integrations</h2>
+                <IntegrationsList detailed />
+              </section>
+            )}
+
+            {active === "Analytics" && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold">Analytics</h2>
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                  <h3 className="font-medium mb-3">Ticket Volume (Last 14 days)</h3>
+                  <BigAreaChart />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {["Resolution Time", "CSAT", "SLA"].map((k) => (
+                    <div key={k} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4">
+                      <div className="font-medium mb-2">{k}</div>
+                      <MiniSparkline height={64} />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {active === "Team" && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold">Team</h2>
+                <TeamList />
+              </section>
+            )}
+
+            {active === "Help" && (
+              <section className="space-y-4">
+                <h2 className="text-xl font-semibold">Help Center</h2>
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 space-y-2">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">Find quick answers, docs, and troubleshooting tips for Avyra.</p>
+                  <ul className="list-disc pl-5 text-sm space-y-1">
+                    <li>Getting started: Workspaces, roles, and permissions</li>
+                    <li>Connecting Roblox group & Discord server</li>
+                    <li>Automation rules & webhooks</li>
+                    <li>Verification flows & nickname sync</li>
+                    <li>Billing & invoices</li>
+                  </ul>
+                </div>
+              </section>
+            )}
+
+            {active === "Settings" && (
+              <section className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">Settings</h2>
+                  <button onClick={() => setSettingsOpen(true)} className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">Open Drawer</button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 space-y-3">
+                    <h3 className="font-medium">Workspace</h3>
+                    <label className="text-sm">Name</label>
+                    <input className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none" defaultValue="Avyra" />
+                    <label className="text-sm">Primary Color</label>
+                    <input type="color" defaultValue="#4f46e5" className="h-10 w-16 rounded" />
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 space-y-3">
+                    <h3 className="font-medium">Security</h3>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Two-factor authentication</span>
+                      <button className="px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm">Enable</button>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm">Session timeout</span>
+                      <select className="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none">
+                        <option>30 minutes</option>
+                        <option>60 minutes</option>
+                        <option>90 minutes</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            )}
+          </main>
+        </div>
+
+        {/* Modals & Drawers */}
+        {newTicketOpen && (
+          <Modal onClose={() => setNewTicketOpen(false)} title="Create Ticket">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                alert("Ticket submitted! (wire this to your backend)");
+                setNewTicketOpen(false);
+              }}
+              className="space-y-3"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-sm">Subject</label>
+                  <input required className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none" placeholder="What's the issue?" />
+                </div>
+                <div>
+                  <label className="text-sm">Priority</label>
+                  <select className="w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none">
+                    <option>Low</option>
+                    <option>Medium</option>
+                    <option>High</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm">Details</label>
+                <textarea className="w-full min-h-[120px] px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none" placeholder="Describe the problem…" />
+              </div>
+              <div className="flex items-center justify-end gap-2">
+                <button type="button" onClick={() => setNewTicketOpen(false)} className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">Cancel</button>
+                <button type="submit" className="px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">Submit</button>
+              </div>
+            </form>
+          </Modal>
+        )}
+
+        {settingsOpen && (
+          <Drawer onClose={() => setSettingsOpen(false)} title="Settings">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-1">Branding</h4>
+                <p className="text-sm text-slate-500">Upload your logo, set colors, and personalize the workspace.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+                  <label className="text-sm">Logo</label>
+                  <div className="mt-2 h-24 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-sm">Drop image</div>
+                </div>
+                <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+                  <label className="text-sm">Accent</label>
+                  <input type="color" defaultValue="#7c3aed" className="h-10 w-16 rounded" />
+                </div>
+              </div>
+              <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3">
+                <label className="text-sm">Custom domain</label>
+                <input placeholder="app.yourdomain.com" className="mt-2 w-full px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 outline-none" />
+              </div>
+              <div className="flex items-center justify-end">
+                <button onClick={() => setSettingsOpen(false)} className="px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">Done</button>
+              </div>
+            </div>
+          </Drawer>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------- UI Components ----------------------------- */
+function Logo() {
+  return (
+    <div className="flex items-center gap-2 select-none">
+      <div className="h-8 w-8 grid place-items-center rounded-xl shadow-sm bg-gradient-to-br from-indigo-500 via-fuchsia-500 to-rose-500 text-white font-bold">
+        A
+      </div>
+      <span className="font-semibold">Avyra</span>
+    </div>
+  );
+}
+
+function Announcement() {
+  return (
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-gradient-to-r from-indigo-50 to-fuchsia-50 dark:from-slate-900/40 dark:to-slate-900/20 p-4">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+        <div className="flex items-center gap-3">
+          <SparklesIcon />
+          <div>
+            <div className="font-medium">Welcome to the Avyra Console</div>
+            <p className="text-sm text-slate-600 dark:text-slate-400">Manage tickets, projects, and integrations for your Roblox & Discord operations.</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">Docs</button>
+          <button className="px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900">Quick Start</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TicketsTable({ tickets, compact = false }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-sm">
+        <thead>
+          <tr className="text-left text-slate-500 border-b border-slate-200 dark:border-slate-800">
+            <th className="py-2 pr-4">ID</th>
+            <th className="py-2 pr-4">Subject</th>
+            <th className="py-2 pr-4">Priority</th>
+            <th className="py-2 pr-4">Status</th>
+            {!compact && <th className="py-2 pr-4">Assignee</th>}
+            <th className="py-2 pr-4">Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {tickets.map((t) => (
+            <tr key={t.id} className="border-b border-slate-100 dark:border-slate-800">
+              <td className="py-3 pr-4 font-mono text-xs">{t.id}</td>
+              <td className="py-3 pr-4">{t.subject}</td>
+              <td className="py-3 pr-4"><Badge>{t.priority}</Badge></td>
+              <td className="py-3 pr-4"><Badge tone={t.status === "Open" ? "blue" : t.status === "In Progress" ? "purple" : "slate"}>{t.status}</Badge></td>
+              {!compact && <td className="py-3 pr-4">{t.assignee}</td>}
+              <td className="py-3 pr-4 text-slate-500">{t.updated}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function IntegrationsList({ detailed = false }) {
+  const items = [
+    { name: "Discord", desc: "Sync roles, ModMail relays, and channel webhooks.", connected: true },
+    { name: "Roblox", desc: "Verify users and manage group ranks.", connected: true },
+    { name: "GitHub", desc: "Deploy automations via Actions.", connected: false },
+    { name: "Stripe", desc: "Billing portal and invoices.", connected: true },
+    { name: "Slack", desc: "Cross-team notifications.", connected: false },
+  ];
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {items.map((it) => (
+        <div key={it.name} className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 bg-white dark:bg-slate-950">
+          <div className="flex items-center justify-between mb-1">
+            <div className="font-medium">{it.name}</div>
+            <Badge tone={it.connected ? "green" : "slate"}>{it.connected ? "Connected" : "Not connected"}</Badge>
+          </div>
+          <p className="text-sm text-slate-600 dark:text-slate-400">{it.desc}</p>
+          {detailed && (
+            <div className="mt-3 flex items-center gap-2">
+              <button className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800">Configure</button>
+              <button className={`px-3 py-2 rounded-xl ${it.connected ? "bg-slate-100 dark:bg-slate-800" : "bg-slate-900 text-white dark:bg-white dark:text-slate-900"}`}>{it.connected ? "Disconnect" : "Connect"}</button>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TeamList() {
+  const team = [
+    { name: "Sam Bam", role: "Operations Lead" },
+    { name: "Ivy", role: "Billing" },
+    { name: "Niko", role: "Product" },
+    { name: "Kai", role: "Engineering" },
+    { name: "Amira Q.", role: "Support" },
+  ];
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {team.map((m) => (
+        <div key={m.name} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-fuchsia-500" />
+          <div>
+            <div className="font-medium">{m.name}</div>
+            <div className="text-sm text-slate-500">{m.role}</div>
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <button className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-sm">Message</button>
+            <button className="px-3 py-2 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-sm">Assign</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MiniSparkline({ height = 48 }) {
+  // Simple inline sparkline SVG
+  const points = [0, 12, 8, 20, 14, 28, 18, 32, 26, 44, 37, 40, 48, 60, 52, 64, 58, 72];
+  const path = points.map((y, i) => `${(i / (points.length - 1)) * 100},${100 - y}`).join(" ");
+  return (
+    <svg viewBox="0 0 100 100" className="mt-3 w-full" style={{ height }}>
+      <polyline points={path} fill="none" stroke="currentColor" strokeWidth="2" opacity="0.7" />
+    </svg>
+  );
+}
+
+function BigAreaChart() {
+  // Simple area chart with gradient
+  const pts = [10, 18, 12, 25, 16, 30, 22, 38, 27, 45, 33, 50, 38, 60];
+  const d = pts.map((y, i) => `${(i / (pts.length - 1)) * 100},${100 - y}`).join(" ");
+  return (
+    <svg viewBox="0 0 100 100" className="w-full h-56">
+      <defs>
+        <linearGradient id="grad" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+      <polyline points={d} fill="none" stroke="currentColor" strokeWidth="2" />
+      <polygon
+        points={`0,100 ${d} 100,100`}
+        fill="url(#grad)"
+      />
+      <g className="text-xs fill-current">
+        {[0, 25, 50, 75, 100].map((x) => (
+          <text key={x} x={x} y={98} textAnchor="middle" className="opacity-60">{x}%</text>
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+function Badge({ children, tone = "slate" }) {
+  const tones = {
+    slate: "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300",
+    blue: "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300",
+    green: "bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300",
+    purple: "bg-fuchsia-100 dark:bg-fuchsia-900/40 text-fuchsia-700 dark:text-fuchsia-300",
+  } as const;
+  return (
+    <span className={`px-2 py-1 rounded-full text-xs ${tones[tone]}`}>{children}</span>
+  );
+}
+
+function Modal({ title, children, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[92vw] sm:w-[560px] rounded-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">{title}</h3>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"><XIcon /></button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Drawer({ title, children, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute right-0 top-0 h-full w-[92vw] sm:w-[520px] bg-white dark:bg-slate-950 border-l border-slate-200 dark:border-slate-800 p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">{title}</h3>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"><XIcon /></button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* --------------------------------- Icons -------------------------------- */
+function BurgerIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  );
+}
+function XIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6l-12 12"/></svg>
+  );
+}
+function OverviewIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h7V3H3v9zm0 9h7v-7H3v7zm11 0h7V12h-7v9zm0-18v7h7V3h-7z"/></svg>
+  );
+}
+function TicketIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9a3 3 0 006 0h6a3 3 0 006 0v6a3 3 0 00-6 0H9a3 3 0 00-6 0V9z"/></svg>
+  );
+}
+function ProjectIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M4 12h10M4 17h7"/></svg>
+  );
+}
+function PlugIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v6m4-6v6m-8 0V5m-3 7h14v3a7 7 0 11-14 0v-3z"/></svg>
+  );
+}
+function ChartIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 19h16M6 17V7m6 10V4m6 13V10"/></svg>
+  );
+}
+function TeamIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 20a4 4 0 118 0M9 8a3 3 0 106 0 3 3 0 00-6 0zM4 20v-1a4 4 0 014-4m12 5v-1a4 4 0 00-4-4"/></svg>
+  );
+}
+function HelpIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.09 9a3 3 0 115.82 1c0 2-3 2-3 4"/><circle cx="12" cy="17" r=".5"/></svg>
+  );
+}
+function SettingsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06A1.65 1.65 0 0015 19.4a1.65 1.65 0 00-1 .6 1.65 1.65 0 01-2 0 1.65 1.65 0 00-1-.6 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-.6-1 1.65 1.65 0 010-2 1.65 1.65 0 00.6-1 1.65 1.65 0 00-.33-1.82l-.06-.06A2 2 0 014.6 5.4l.06.06A1.65 1.65 0 006 6a1.65 1.65 0 001-.6 1.65 1.65 0 012 0A1.65 1.65 0 0010 6a1.65 1.65 0 001.82-.33l.06-.06A2 2 0 0114.71 8l-.06.06c-.46.46-.58 1.14-.33 1.82.25.68.89 1.12 1.62 1.12.73 0 1.37-.44 1.62-1.12.25-.68.13-1.36-.33-1.82l-.06-.06A2 2 0 0119.4 8.6l.06.06c.46.46.58 1.14.33 1.82a1.65 1.65 0 000 2c.25.68.89 1.12 1.62 1.12.73 0 1.37-.44 1.62-1.12z"/></svg>
+  );
+}
+function UpRightIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2"><path d="M7 17L17 7M9 7h8v8"/></svg>
+  );
+}
+function SparklesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" fill="currentColor"><path d="M5 3l1.5 3L10 7.5 6.5 9 5 12l-1.5-3L0 7.5 3.5 6 5 3zm9 2l2 4 4 2-4 2-2 4-2-4-4-2 4-2 2-4zm-8 10l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z"/></svg>
+  );
+}
