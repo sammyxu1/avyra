@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Avyra Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-black">
+  <header class="fixed top-0 left-0 right-0 bg-[#001f3f] text-white flex justify-between items-center px-6 py-4 z-50">
+    <div class="text-xl font-bold">Avyra</div>
+    <nav class="space-x-6">
+      <a href="/" class="hover:underline">Home</a>
+      <a href="/docs.html" class="hover:underline">Docs</a>
+      <a href="/dashboard.html" class="hover:underline">Dashboard</a>
+      <a href="/contact.html" class="hover:underline">Contact</a>
+    </nav>
+  </header>
+
+  <section class="pt-24 px-6">
+    <h1 class="text-3xl font-bold text-center mb-12">Dashboard</h1>
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      <!-- Guild Members -->
+      <div class="border p-6 rounded-lg bg-white">
+        <h3 class="font-bold mb-4">Guild Members</h3>
+        <div class="flex gap-2 mb-4">
+          <input id="guildId" type="text" placeholder="Guild ID" class="border rounded px-3 py-2 flex-grow">
+          <button onclick="fetchGuild()" class="bg-[#001f3f] text-white px-4 py-2 rounded">Fetch</button>
+        </div>
+        <p id="guildOutput" class="text-gray-700">No guild linked.</p>
+      </div>
+
+      <!-- Roblox Group Members -->
+      <div class="border p-6 rounded-lg bg-white">
+        <h3 class="font-bold mb-4">Roblox Group Members</h3>
+        <div class="flex gap-2 mb-4">
+          <input id="groupId" type="text" placeholder="Group ID" class="border rounded px-3 py-2 flex-grow">
+          <button onclick="fetchGroup()" class="bg-[#001f3f] text-white px-4 py-2 rounded">Fetch</button>
+        </div>
+        <p id="groupOutput" class="text-gray-700">No group linked.</p>
+      </div>
+
+      <!-- Ban Manager -->
+      <div class="border p-6 rounded-lg bg-white">
+        <h3 class="font-bold mb-4">Ban Manager</h3>
+        <div class="flex gap-2 mb-4">
+          <input id="banUser" type="text" placeholder="Roblox Username" class="border rounded px-3 py-2 flex-grow">
+          <button onclick="addBan()" class="bg-red-600 text-white px-4 py-2 rounded">Ban</button>
+        </div>
+        <ul id="banList" class="space-y-2"></ul>
+      </div>
+
+      <!-- Activity Tracker -->
+      <div class="border p-6 rounded-lg bg-white">
+        <h3 class="font-bold mb-4">Activity Tracker</h3>
+        <p class="text-gray-600">(Coming Soon)</p>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    async function fetchGuild() {
+      const id = document.getElementById("guildId").value.trim();
+      if (!id) return;
+      try {
+        const res = await fetch(`https://discord.com/api/guilds/${id}/widget.json`);
+        if (!res.ok) throw new Error("Guild widget not enabled or invalid ID");
+        const data = await res.json();
+        document.getElementById("guildOutput").textContent =
+          `Guild: ${data.name} | Members Online: ${data.presence_count}`;
+      } catch (err) {
+        document.getElementById("guildOutput").textContent = `Error: ${err.message}`;
+      }
+    }
+
+    async function fetchGroup() {
+      const id = document.getElementById("groupId").value.trim();
+      if (!id) return;
+      try {
+        const res = await fetch(`https://groups.roblox.com/v1/groups/${id}`);
+        if (!res.ok) throw new Error("Invalid Group ID");
+        const data = await res.json();
+        document.getElementById("groupOutput").textContent =
+          `Group: ${data.name} | Members: ${data.memberCount}`;
+      } catch (err) {
+        document.getElementById("groupOutput").textContent = `Error: ${err.message}`;
+      }
+    }
+
+    function addBan() {
+      const username = document.getElementById("banUser").value.trim();
+      if (!username) return;
+      const li = document.createElement("li");
+      li.className = "flex justify-between items-center border-b pb-1";
+      li.textContent = username;
+      const btn = document.createElement("button");
+      btn.textContent = "Unban";
+      btn.className = "bg-red-600 text-white px-2 py-1 rounded text-sm ml-2";
+      btn.onclick = () => li.remove();
+      li.appendChild(btn);
+      document.getElementById("banList").appendChild(li);
+      document.getElementById("banUser").value = "";
+    }
+  </script>
+</body>
+</html>
